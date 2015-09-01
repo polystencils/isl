@@ -4467,6 +4467,37 @@ error:
 	return NULL;
 }
 
+#if defined(PLUTO)
+/* Create a piecewise quasi affine expression equivalent to a particular
+ * dimension of an isl_map. Return NULL if that is not possible.
+ */
+__isl_give isl_pw_aff *isl_pw_aff_from_map_dim(__isl_keep isl_map *map, int pos)
+{
+    isl_map *tmap;
+    int n_out;
+
+    if (!map) return NULL;
+
+    n_out = isl_map_dim(map, isl_dim_out);
+
+    if (pos < 0 || pos >= n_out) {
+        isl_die(isl_map_get_ctx(map), isl_error_invalid,
+                "dim position out of bounds", return NULL);
+    }
+
+    tmap = isl_map_copy(map);
+    tmap = isl_map_project_out(tmap, isl_dim_out, pos+1, n_out-pos-1);
+    tmap = isl_map_project_out(tmap, isl_dim_out, 0, pos);
+
+    isl_pw_multi_aff *pw_m_aff =  isl_pw_multi_aff_from_map(tmap);
+    isl_pw_aff  *pw_aff = isl_pw_multi_aff_get_pw_aff(pw_m_aff, 0);
+
+    isl_pw_multi_aff_free(pw_m_aff);
+
+    return pw_aff;
+}
+#endif
+
 __isl_give isl_pw_multi_aff *isl_pw_multi_aff_from_set(__isl_take isl_set *set)
 {
 	return isl_pw_multi_aff_from_map(set);
